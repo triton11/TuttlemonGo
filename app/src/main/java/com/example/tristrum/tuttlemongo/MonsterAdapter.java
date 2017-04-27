@@ -1,8 +1,11 @@
 package com.example.tristrum.tuttlemongo;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.provider.Settings;
+
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,17 +48,49 @@ public class MonsterAdapter extends RecyclerView.Adapter<MonsterAdapter.MonsterV
     }
 
     @Override
-    public void onBindViewHolder(MonsterViewHolder holder, final int position) {
+    public void onBindViewHolder(final MonsterViewHolder holder, final int position) {
         holder.name.setText(names.get(position));
         holder.level.setText(levels.get(position));
         if (!(urls.get(position).equals(""))) {
             Picasso.with(c).load(urls.get(position)).resize(150, 150).into(holder.image);
-
             holder.trade.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent(c, TradeActivity.class);
                     intent.putExtra("name", names.get(position) + " " + levels.get(position));
                     c.startActivity(intent);
+                }
+            });
+            holder.delete.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    AlertDialog.Builder alert = new AlertDialog.Builder(c);
+                    alert.setTitle("Hey Pal");
+                    alert.setMessage("Do you really want to delete this TuttleMon?");
+                    alert.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //do your work here
+                            SavedHelper mydb = new SavedHelper(c);
+                            mydb.deleteTitle(names.get(position));
+                            mydb.close();
+                            names.remove(position);
+                            urls.remove(position);
+                            levels.remove(position);
+                            notifyItemRemoved(position);
+                            dialog.dismiss();
+
+                        }
+                    });
+                    alert.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            dialog.dismiss();
+                        }
+                    });
+
+                    alert.show();
                 }
             });
         }
@@ -75,6 +110,7 @@ public class MonsterAdapter extends RecyclerView.Adapter<MonsterAdapter.MonsterV
         @BindView(R.id.level) TextView level;
         @BindView(R.id.picture) ImageView image;
         @BindView(R.id.buttond) Button trade;
+        @BindView(R.id.delete) Button delete;
 
         public MonsterViewHolder(View itemView, Context c) {
             super(itemView);

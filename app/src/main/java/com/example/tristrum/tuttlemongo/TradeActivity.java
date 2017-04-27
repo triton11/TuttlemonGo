@@ -61,7 +61,16 @@ public class TradeActivity extends AppCompatActivity {
 
         String[] q = namelevel.split(" ");
 
-        String url = "https://robohash.org/" + q[0] + " " + q[1] + ".png?set=set3";
+        String app = "1";
+        if (Integer.parseInt(q[2]) < 70) {
+            app = "3";
+        } else if (Integer.parseInt(q[2]) < 95) {
+            app = "1";
+        } else {
+            app = "2";
+        }
+
+        String url = "https://robohash.org/" + q[0] + " " + q[1] + ".png?set=set" + app;
 
         Picasso.with(this).load(url).resize(150, 150).into(image);
 
@@ -74,7 +83,7 @@ public class TradeActivity extends AppCompatActivity {
         System.out.println(sb.toString());
         final String cc = sb.toString();
 
-        code.setText(cc);
+        code.setText("Your Code: " + cc);
         button.setVisibility(View.GONE);
 
         RedisServer.getService().makePost(cc, namelevel).enqueue(new Callback<RedisServer.SetResponse>() {
@@ -100,9 +109,17 @@ public class TradeActivity extends AppCompatActivity {
                 String[] we = response.body().item.split(" ");
                 System.out.println(response.body().item);
                 String firstname = we[0] + " " + we[1];
-                String level = String.valueOf(Integer.parseInt(we[2]) + 1);
+                String level = String.valueOf(Integer.parseInt(we[2]));
+                String app;
+                if (Integer.parseInt(we[2]) < 70) {
+                    app = "3";
+                } else if (Integer.parseInt(we[2]) < 95) {
+                    app = "1";
+                } else {
+                    app = "2";
+                }
 
-                mydb.insertMonster(firstname, level, "https://robohash.org/" + firstname + ".png?set=set3");
+                mydb.insertMonster(firstname, level, "https://robohash.org/" + firstname + ".png?set=set" + app);
                 String[] q = namelevel.split(" ");
                 String title = q[0] + " " + q[1];
                 mydb.deleteTitle(title);

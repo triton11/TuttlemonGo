@@ -2,6 +2,7 @@ package com.example.tristrum.tuttlemongo;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -42,7 +44,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
-    MarkerOptions mk;
+    Marker mk;
     boolean marker;
     LocationRequest mLocationRequest;
     int k;
@@ -134,17 +136,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         double lon = location.getLongitude();
         double lat = location.getLatitude();
         makeNewBot(lon, lat);
-        k+=1;
+//        k+=1;
         if (((Math.abs(Math.abs(lon) - Math.abs(longitude)) < 0.0005) &&
                 (Math.abs(Math.abs(lon) - Math.abs(longitude)) < 0.0005)) || k > 10) {
             k = 0;
             Toast.makeText(c, "Caught em!", Toast.LENGTH_LONG).show();
-            newbot();
             if (mGoogleApiClient != null) {
                 LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             }
-            mk = null;
+            mk.remove();
             marker = false;
+            newbot();
         }
 
         //stop location updates
@@ -247,8 +249,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    Random rand = new Random();
+                    int x = rand.nextInt(101) + 1;
+                    String app = "1";
+                    if (x < 70) {
+                        app = "3";
+                    } else if (x < 95) {
+                        app = "1";
+                    } else {
+                        app = "2";
+                    }
+                    mydb.insertMonster(firstname, Integer.toString(x), "https://robohash.org/" +
+                            firstname + ".png?set=set" + app);
+                    Intent i = new Intent(c, CollectActivity.class);
+                    startActivity(i);
 
-                    mydb.insertMonster(firstname, "1", "https://robohash.org/" + firstname + ".png?set=set3");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -260,28 +275,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void makeNewBot(double lon, double lat) {
         if (marker == false) {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(lat, lon))      // Sets the center of the map to location user
+                    .zoom(16)                   // Sets the zoom
+//                    .bearing(90)                // Sets the orientation of the camera to east
+//                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
             Random rand = new Random();
             int x = rand.nextInt(3);
             int y = rand.nextInt(3);
             if (x == 1) {
-                longitude = lon+0.001;
+                longitude = lon+0.003;
             } else if (x == 2) {
-                longitude = lon-0.001;
+                longitude = lon-0.003;
             } else {
                 longitude = lon;
             }
             if (y == 1) {
-                latitude = lat+0.001;
-            } else if (y == 2) {
-                latitude = lat-0.001;
+                latitude = lat+0.003;
             } else {
-                latitude = lat;
+                latitude = lat-0.003;
             }
+
             System.out.println(lon + " " + lat);
             LatLng mark = new LatLng(latitude, longitude);
-            mk = new MarkerOptions().position(mark).title("Marker");
-            mMap.addMarker(mk);
+            mk = mMap.addMarker(new MarkerOptions().position(mark).title("Marker"));
+            mk.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.web_hi_res_512));
             marker = true;
         }
     }
